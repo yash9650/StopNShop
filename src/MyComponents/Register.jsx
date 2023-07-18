@@ -7,13 +7,44 @@ import { Link } from 'react-router-dom';
 import  shop  from '../images/shop.png';
 import useAuth from '../hooks/use-auth';
 import AuthContext from '../context/auth-context';
+import { useEffect } from 'react';
+import LoadingSpinner from '../HelperComponent/LoadingSpinner';
 
-export default function Register() {
+function Register() {
 
     const { setIsLoggedIn } = useContext(AuthContext);
     const [dropdownOpen, setdropdownOpen] = useState(false);
     const navigate = useNavigate();
+    const [username,setUserName] = useState('');
+    const [available,setAvailable] = useState(false);
+    const [isLoading ,setIsLoading] = useState(false);
+    useEffect(() => {
+        if(!username.trim().length == 0){
+            setIsLoading(true);
+            var timer = setTimeout(()=>{
+                const data = {userName: username};
+                fetch('/checkUserNameAvailablilty',{
+                    method: 'POST',
+                    headers: {
+                        'Content-type': 'application/json'
+                      },
+                    body: JSON.stringify(data)
+                }).then((res) => res.json()).then(
+                    (res) => setAvailable(res.available)
+                ).catch((err)=> console.log(err));
+                setIsLoading(false);
+            },800);
+        }
+        return () => {
+          setIsLoading(false);      
+        clearTimeout(timer);
+      }
+    }, [username])
+    
 
+    const userInputHandler = (e) => {
+        setUserName(e.target.value);
+    }
 
     const toggle = () => {
         setdropdownOpen((prevState) => !prevState);
@@ -44,9 +75,14 @@ export default function Register() {
                     <FormGroup row>
                         <Label for="username" sm={2}>Username</Label>
                         <Col sm={10}>
-                            <Input type="text" name="username" id="username" onChange={manageChange} placeholder="Enter your username" required/>
+                            <Input type="text" name="username" id="username" onInput={userInputHandler} onChange={manageChange} placeholder="Enter your username" required/>
                         </Col>
                     </FormGroup>
+                    {isLoading && <LoadingSpinner/>}
+                    { !username.trim().length == 0 & !isLoading ? (available) ? 
+                    <p style={{fontSize:'small',padding:'3px',margin:'0px', color: 'green'}}>Username available</p>
+                     : <p style={{fontSize:'small',padding:'0px',margin:'0px', color: 'red'}}>Username already in use</p>
+                     : ''} 
                     <FormGroup row>
                         <Label for="email" sm={2}>Email</Label>
                         <Col sm={10}>
@@ -75,3 +111,5 @@ export default function Register() {
     </div>
   )
 }
+
+export default React.memo(Register);

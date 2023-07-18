@@ -28,13 +28,14 @@ export default function DisplayCard(props) {
       }
 
       const cartHandler = (items) => {
+        console.log(items)
         if(!isLoggedIn){
           window.alert('Logging in first');
           navigate('/login');
           return;
         }
         const {id} = props.currentUser;
-        const {itemName, description,price,image,type,quantity,weight} = items;
+        const {itemName, description,price,image,type,quantity,weight,_id} = items;
         const item = {
           itemName,
           description,
@@ -43,7 +44,8 @@ export default function DisplayCard(props) {
           type,
           quantity: 1,
           weight,
-          userId: id
+          userId: id,
+          objectId: _id
         }
         fetch('/cart' , {
           method: "POST",
